@@ -195,9 +195,6 @@ void rockchip_pwr_domain_suspend(const psci_power_state_t *target_state)
 	if (RK_CLUSTER_PWR_STATE(target_state) == PLAT_MAX_OFF_STATE)
 		plat_cci_disable();
 
-	if (RK_SYSTEM_PWR_STATE(target_state) == PLAT_MAX_OFF_STATE)
-		return;
-
 	if (!rockchip_ops || !rockchip_ops->hlvl_pwr_dm_suspend)
 		return;
 
@@ -266,12 +263,6 @@ void rockchip_pwr_domain_suspend_finish(const psci_power_state_t *target_state)
 	if (!rockchip_ops)
 		goto comm_finish;
 
-	if (RK_SYSTEM_PWR_STATE(target_state) == PLAT_MAX_OFF_STATE) {
-		if (rockchip_ops->sys_pwr_dm_resume)
-			rockchip_ops->sys_pwr_dm_resume();
-		goto comm_finish;
-	}
-
 	if (rockchip_ops->hlvl_pwr_dm_resume) {
 		for (lvl = MPIDR_AFFLVL1; lvl <= PLAT_MAX_PWR_LVL; lvl++) {
 			lvl_state = target_state->pwr_domain_state[lvl];
@@ -279,16 +270,20 @@ void rockchip_pwr_domain_suspend_finish(const psci_power_state_t *target_state)
 		}
 	}
 
-	if (rockchip_ops->cores_pwr_dm_resume)
+	if (RK_SYSTEM_PWR_STATE(target_state) == PLAT_MAX_OFF_STATE &&
+	    rockchip_ops->sys_pwr_dm_resume) {
+		rockchip_ops->sys_pwr_dm_resume();
+	} else if (rockchip_ops->cores_pwr_dm_resume) {
 		rockchip_ops->cores_pwr_dm_resume();
-	/*
-	 * Program the gic per-cpu distributor or re-distributor interface.
-	 * For sys power domain operation, resuming of the gic needs to operate in
-	 * rockchip_ops->sys_pwr_dm_resume, according to the sys power mode implements.
-	*/
-	plat_rockchip_gic_cpuif_enable();
+	}
 
 comm_finish:
+	/*
+	 * Program the gic per-cpu distributor
+	 * or re-distributor interface
+	 */
+	plat_rockchip_gic_cpuif_enable();
+
 	/* Perform the common cluster specific operations */
 	if (RK_CLUSTER_PWR_STATE(target_state) == PLAT_MAX_OFF_STATE) {
 		/* Enable coherency if this cluster was off */
