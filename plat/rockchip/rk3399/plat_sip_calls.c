@@ -43,6 +43,8 @@
 
 uint64_t ddr_smc_handler(uint64_t arg0, uint64_t arg1, uint64_t id)
 {
+	return SMC_UNK;
+
 	switch (id) {
 	case CONFIG_DRAM_INIT:
 		ddr_init();
