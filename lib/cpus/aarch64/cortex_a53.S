@@ -122,6 +122,39 @@ disable_hint:
 	ret
 endfunc a53_disable_non_temporal_hint
 
+	/* --------------------------------------------------
+	 * Errata Workaround for Cortex A53 Errata #855873.
+	 *
+	 * This applies only to revisions >= r0p3 of Cortex A53.
+	 * Earlier revisions of the core are affected as well, but don't
+	 * have the chicken bit in the CPUACTLR register. It is expected that
+	 * the rich OS takes care of that, especially as the workaround is
+	 * shared with other erratas in those revisions of the CPU.
+	 * Inputs:
+	 * x0: variant[4:7] and revision[0:3] of current cpu.
+	 * Shall clobber: x0-x17
+	 * --------------------------------------------------
+	 */
+func errata_a53_855873_wa
+	/*
+	 * Compare x0 against revision r0p3 and higher
+	 */
+        mov     x17, x30
+        bl      check_errata_855873
+        cbz     x0, 1f
+
+	mrs	x1, CPUACTLR_EL1
+	orr	x1, x1, #CPUACTLR_ENDCCASCI
+	msr	CPUACTLR_EL1, x1
+1:
+	ret	x17
+endfunc errata_a53_855873_wa
+
+func check_errata_855873
+	mov	x1, #0x03
+	b	cpu_rev_var_hs
+endfunc check_errata_855873
+
 	/* -------------------------------------------------
 	 * The CPU Ops reset function for Cortex-A53.
 	 * Clobbers: x0-x5, x15, x19, x30
@@ -149,6 +182,11 @@ func cortex_a53_reset_func
 #if ERRATA_A53_836870 || A53_DISABLE_NON_TEMPORAL_HINT
 	mov	x0, x15
 	bl	a53_disable_non_temporal_hint
+#endif
+
+#if ERRATA_A53_855873
+	mov	x0, x15
+	bl	errata_a53_855873_wa
 #endif
 
 	/* ---------------------------------------------
@@ -234,13 +272,15 @@ endfunc cortex_a53_cluster_pwr_dwn
 	 */
 .section .rodata.cortex_a53_regs, "aS"
 cortex_a53_regs:  /* The ascii list of register names to be reported */
-	.asciz	"cpuectlr_el1", "cpumerrsr_el1", "l2merrsr_el1", ""
+	.asciz	"cpuectlr_el1", "cpumerrsr_el1", "l2merrsr_el1", \
+		"cpuactlr_el1", ""
 
 func cortex_a53_cpu_reg_dump
 	adr	x6, cortex_a53_regs
 	mrs	x8, CPUECTLR_EL1
 	mrs	x9, CPUMERRSR_EL1
 	mrs	x10, L2MERRSR_EL1
+	mrs	x11, CPUACTLR_EL1
 	ret
 endfunc cortex_a53_cpu_reg_dump
 
