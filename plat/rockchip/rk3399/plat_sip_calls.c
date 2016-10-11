@@ -45,8 +45,6 @@
 uint32_t ddr_smc_handler(uint64_t arg0, uint64_t arg1,
 			 uint64_t id, uint64_t arg2)
 {
-	return SMC_UNK;
-
 	switch (id) {
 	case DRAM_SET_RATE:
 		return ddr_set_rate((uint32_t)arg0);
