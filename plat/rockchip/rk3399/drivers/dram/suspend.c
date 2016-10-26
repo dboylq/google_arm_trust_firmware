@@ -718,6 +718,8 @@ __sramfunc void dmc_restore(void)
 	uint32_t channel_mask = 0;
 	uint32_t channel;
 
+	configure_sgrf();
+
 retry:
 	for (channel = 0; channel < sdram_params->num_channels; channel++) {
 		phy_pctrl_reset(channel);
@@ -753,6 +755,4 @@ retry:
 
 	/* Switch to index 1 and prepare for DDR frequency switch. */
 	dram_switch_to_phy_index1(sdram_params);
-
-	configure_sgrf();
 }

@@ -129,7 +129,7 @@
 #define SYS_REG_ENC_DBW(n, ch)		((2 >> (n)) << (0 + (ch) * 16))
 #define SYS_REG_DEC_DBW(n, ch)		(2 >> (((n) >> (0 + (ch) * 16)) & 0x3))
 #define DDR_STRIDE(n)		mmio_write_32(SGRF_BASE + SGRF_SOC_CON3_7(4), \
-					      (0x1f<<(10+16))|((n)<<10));
+					      (0x1f<<(10+16))|((n)<<10))
 
 #define CTL_REG_NUM		332
 #define PHY_REG_NUM		959
@@ -261,9 +261,7 @@ struct rk3399_sdram_params {
 	struct rk3399_ddr_publ_regs phy_regs;
 };
 
-#define __sramlocalfunc __attribute__((section(".sram.text")))
-
-__sramdata extern struct rk3399_sdram_params sdram_config;
+extern __sramdata struct rk3399_sdram_params sdram_config;
 
 void dram_init(void);
 
