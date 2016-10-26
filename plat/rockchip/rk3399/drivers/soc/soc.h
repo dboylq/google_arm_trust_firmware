@@ -64,11 +64,7 @@
 #define PLL_NO_BYPASS_MODE		WMSK_BIT(PLL_BYPASS_SHIFT)
 
 #define PLL_CON_COUNT			0x06
-#define CRU_CLKSEL_COUNT		108
-#define CRU_CLKSEL_CON(n)		(0x100 + (n) * 4)
 
-#define PMUCRU_CLKSEL_CONUT		0x06
-#define PMUCRU_CLKSEL_OFFSET		0x080
 #define REG_SIZE			0x04
 #define REG_SOC_WMSK			0xffff0000
 #define CLK_GATE_MASK			0x01
@@ -108,8 +104,6 @@ enum glb_sft_reset {
 
 struct deepsleep_data_s {
 	uint32_t plls_con[END_PLL_ID][PLL_CON_COUNT];
-	uint32_t pmucru_clksel_con[PMUCRU_CLKSEL_CONUT];
-	uint32_t cru_clksel_con[CRU_CLKSEL_COUNT];
 	uint32_t cru_gate_con[CRU_GATE_COUNT];
 	uint32_t pmucru_gate_con[PMUCRU_GATE_COUNT];
 	uint32_t sgrf_con[SGRF_SOC_COUNT];
@@ -345,10 +339,8 @@ static inline void pmu_sgrf_rst_hld(void)
 void __dead2 soc_global_soft_reset(void);
 void secure_watchdog_disable();
 void secure_watchdog_restore();
-void plls_suspend_prepare(void);
 void disable_dvfs_plls(void);
 void disable_nodvfs_plls(void);
-void plls_resume_finish(void);
 void enable_dvfs_plls(void);
 void enable_nodvfs_plls(void);
 void prepare_abpll_for_ddrctrl(void);
