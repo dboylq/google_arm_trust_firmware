@@ -28,32 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RK3399_MCU_H__
-#define __RK3399_MCU_H__
+#include <m0_param.h>
 
-typedef unsigned int uint32_t;
+OUTPUT_FORMAT("elf32-littlearm")
 
-#define mmio_read_32(c)	({unsigned int __v = \
-				(*(volatile unsigned int *)(c)); __v; })
-#define mmio_write_32(c, v)	((*(volatile unsigned int *)(c)) = (v))
+SECTIONS {
+	.m0_bin 0 : {
+		KEEP(*(.isr_vector))
+		ASSERT(. == 0xc0, "ISR vector has the wrong size.");
+		ASSERT(. == PARAM_ADDR, "M0 params should go right behind ISR table.");
+		. += PARAM_M0_SIZE;
+		*(.text*)
+		*(.rodata*)
+		*(.data*)
+		*(.bss*)
+		. = ALIGN(8);
+		*(.co_stack*)
+	}
 
-#define mmio_clrbits_32(addr, clear) \
-		mmio_write_32(addr, (mmio_read_32(addr) & ~(clear)))
-#define mmio_setbits_32(addr, set) \
-		mmio_write_32(addr, (mmio_read_32(addr)) | (set))
-#define mmio_clrsetbits_32(addr, clear, set) \
-		mmio_write_32(addr, (mmio_read_32(addr) & ~(clear)) | (set))
-
-#define MCU_BASE			0x40000000
-#define PMU_BASE			(MCU_BASE + 0x07310000)
-#define CRU_BASE_ADDR			0x47760000
-#define GRF_BASE_ADDR			0x47770000
-#define PMU_CRU_BASE_ADDR		0x47750000
-#define VOP_LITE_BASE_ADDR		0x478F0000
-#define VOP_BIG_BASE_ADDR		0x47900000
-#define CIC_BASE_ADDR			0x47620000
-
-void handle_suspend(void);
-void handle_dram(void);
-
-#endif /* __RK3399_MCU_H__ */
+	/DISCARD/ : { *(.comment) *(.note*) }
+}

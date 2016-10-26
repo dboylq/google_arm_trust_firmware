@@ -28,32 +28,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RK3399_MCU_H__
-#define __RK3399_MCU_H__
+#ifndef __M0_CTL_H__
+#define __M0_CTL_H__
 
-typedef unsigned int uint32_t;
+#include <m0_param.h>
 
-#define mmio_read_32(c)	({unsigned int __v = \
-				(*(volatile unsigned int *)(c)); __v; })
-#define mmio_write_32(c, v)	((*(volatile unsigned int *)(c)) = (v))
+#define M0_BINCODE_BASE 	((uintptr_t)rk3399m0_bin)
+#define M0_PARAM_ADDR		(M0_BINCODE_BASE + PARAM_ADDR)
 
-#define mmio_clrbits_32(addr, clear) \
-		mmio_write_32(addr, (mmio_read_32(addr) & ~(clear)))
-#define mmio_setbits_32(addr, set) \
-		mmio_write_32(addr, (mmio_read_32(addr)) | (set))
-#define mmio_clrsetbits_32(addr, clear, set) \
-		mmio_write_32(addr, (mmio_read_32(addr) & ~(clear)) | (set))
+/* pmu_fw.c */
+extern char rk3399m0_bin[];
+extern char rk3399m0_bin_end[];
 
-#define MCU_BASE			0x40000000
-#define PMU_BASE			(MCU_BASE + 0x07310000)
-#define CRU_BASE_ADDR			0x47760000
-#define GRF_BASE_ADDR			0x47770000
-#define PMU_CRU_BASE_ADDR		0x47750000
-#define VOP_LITE_BASE_ADDR		0x478F0000
-#define VOP_BIG_BASE_ADDR		0x47900000
-#define CIC_BASE_ADDR			0x47620000
+extern void m0_init(void);
+extern void m0_start(void);
+extern void m0_stop(void);
+extern void m0_wait_done(void);
 
-void handle_suspend(void);
-void handle_dram(void);
-
-#endif /* __RK3399_MCU_H__ */
+#endif /* __M0_CTL_H__ */

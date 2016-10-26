@@ -54,9 +54,6 @@ uint32_t ddr_smc_handler(uint64_t arg0, uint64_t arg1,
 		return ddr_round_rate((uint32_t)arg0);
 	case DRAM_GET_RATE:
 		return ddr_get_rate();
-	case DRAM_CLR_IRQ:
-		clr_dcf_irq();
-		break;
 	case DRAM_SET_ODT_PD:
 		dram_set_odt_pd(arg0, arg1, arg2);
 		break;
