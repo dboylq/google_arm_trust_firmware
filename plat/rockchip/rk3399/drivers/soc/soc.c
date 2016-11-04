@@ -190,7 +190,30 @@ static void dma_secure_cfg(uint32_t secure)
 }
 
 /* pll suspend */
-struct deepsleep_data_s slp_data;
+static struct deepsleep_data_s slp_data;
+
+void secure_watchdog_disable(void)
+{
+	uint32_t val;
+
+	slp_data.sgrf_con[3] = mmio_read_32(SGRF_BASE + SGRF_SOC_CON3_7(3));
+
+	/** Disable CA53 and CM0 wdt pclk
+	 * BIT[8]: ca53 wdt pclk, 0: enable 1: disable
+	 * BIT[10]: cm0 wdt pclk, 0: enable 1: disable
+	 */
+	val = BITS_WITH_WMASK(WDT_CA53_DIS, 0x1, PCLK_WDT_CA53_GATE_SHIFT) |
+	      BITS_WITH_WMASK(WDT_CM0_DIS, 0x1, PCLK_WDT_CM0_GATE_SHIFT);
+	mmio_write_32(SGRF_BASE + SGRF_SOC_CON3_7(3), val);
+}
+
+void secure_watchdog_restore(void)
+{
+	mmio_write_32(SGRF_BASE + SGRF_SOC_CON3_7(3),
+		      slp_data.sgrf_con[3] |
+		      WMSK_BIT(PCLK_WDT_CA53_GATE_SHIFT) |
+		      WMSK_BIT(PCLK_WDT_CM0_GATE_SHIFT));
+}
 
 static void pll_suspend_prepare(uint32_t pll_id)
 {
