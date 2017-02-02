@@ -82,6 +82,8 @@ static void ddr_set_pll(void)
 
 void handle_dram(void)
 {
+	mmio_setbits_32(PHY_REG(0, 927), (1 << 22));
+	mmio_setbits_32(PHY_REG(1, 927), (1 << 22));
 	idle_port();
 
 	mmio_write_32(CIC_BASE + CIC_CTRL0,
@@ -97,4 +99,6 @@ void handle_dram(void)
 		continue;
 
 	deidle_port();
+	mmio_clrbits_32(PHY_REG(0, 927), (1 << 22));
+	mmio_clrbits_32(PHY_REG(1, 927), (1 << 22));
 }
