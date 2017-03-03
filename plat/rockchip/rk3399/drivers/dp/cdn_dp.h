@@ -28,62 +28,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cdn_dp.h>
-#include <smcc.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef __SOC_ROCKCHIP_RK3399_DP_H__
+#define __SOC_ROCKCHIP_RK3399_DP_H__
+#include <plat_private.h>
 
-__asm__(
-	".pushsection .text.hdcp_handler, \"ax\", %progbits\n"
-	".global hdcp_handler\n"
-	".balign 4\n"
-	"hdcp_handler:\n"
-	".incbin \"" __XSTRING(HDCPFW) "\"\n"
-	".type hdcp_handler, %function\n"
-	".size hdcp_handler, .- hdcp_handler\n"
-	".popsection\n"
-);
+enum {
+	CDN_DP_HDCP_1X_KSV_LEN = 5,
+	CDN_DP_HDCP_KSV_LEN = 8,
+	CDN_DP_HDCP_UID_LEN = 16,
+	CDN_DP_HDCP_SHA_LEN = 20,
+	CDN_DP_HDCP_DPK_LEN = 280,
+	CDN_DP_HDCP_1X_KEYS_LEN	= 285,
+	CDN_DP_HDCP_KEY_LEN = 326,
+};
 
-static uint64_t *hdcp_key_pdata;
-static struct cdn_dp_hdcp_key_1x key;
+struct cdn_dp_hdcp_key_1x {
+	uint8_t ksv[CDN_DP_HDCP_KSV_LEN];
+	uint8_t device_key[CDN_DP_HDCP_DPK_LEN];
+	uint8_t sha1[CDN_DP_HDCP_SHA_LEN];
+	uint8_t uid[CDN_DP_HDCP_UID_LEN];
+	uint16_t seed;
+	uint8_t reserved[10];
+};
 
-int hdcp_handler(struct cdn_dp_hdcp_key_1x *key);
+#define HDCP_KEY_DATA_START_TRANSFER	0
+#define HDCP_KEY_DATA_START_DECRYPT	1
 
-uint64_t dp_hdcp_ctrl(uint64_t type)
-{
-	switch (type) {
-	case HDCP_KEY_DATA_START_TRANSFER:
-		memset(&key, 0x00, sizeof(key));
-		hdcp_key_pdata = (uint64_t *)&key;
-		return 0;
-	case HDCP_KEY_DATA_START_DECRYPT:
-		if (hdcp_key_pdata == (uint64_t *)(&key + 1))
-			return hdcp_handler(&key);
-		else
-			return PSCI_E_INVALID_PARAMS;
-	default:
-		return SMC_UNK;
-	}
-}
+uint64_t dp_hdcp_ctrl(uint64_t type);
 
 uint64_t dp_hdcp_store_key(uint64_t x1,
 			   uint64_t x2,
 			   uint64_t x3,
 			   uint64_t x4,
 			   uint64_t x5,
-			   uint64_t x6)
-{
-	if (hdcp_key_pdata < (uint64_t *)&key ||
-		hdcp_key_pdata + 6 > (uint64_t *)(&key + 1))
-		return PSCI_E_INVALID_PARAMS;
-
-	hdcp_key_pdata[0] = x1;
-	hdcp_key_pdata[1] = x2;
-	hdcp_key_pdata[2] = x3;
-	hdcp_key_pdata[3] = x4;
-	hdcp_key_pdata[4] = x5;
-	hdcp_key_pdata[5] = x6;
-	hdcp_key_pdata += 6;
-
-	return 0;
-}
+			   uint64_t x6);
+#endif
