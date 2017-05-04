@@ -11,6 +11,10 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
+ * Neither the name of ARM nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -23,51 +27,35 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef __ROCKCHIP_PLAT_LD_S__
+#define __ROCKCHIP_PLAT_LD_S__
 
-#include <console.h>
-#include <debug.h>
-#include <platform.h>
-#include <plat_private.h>
-
-/*****************************************************************************
- * sram only surpport 32-bits access
- ******************************************************************************/
-void u32_align_cpy(uint32_t *dst, const uint32_t *src, size_t bytes)
-{
-	uint32_t i;
-
-	for (i = 0; i < bytes; i++)
-		dst[i] = src[i];
+MEMORY {
+    PMUSRAM (rwx): ORIGIN = PMUSRAM_BASE, LENGTH = PMUSRAM_RSIZE
 }
 
-void rockchip_plat_sram_mmu_el3(void)
+SECTIONS
 {
-	size_t sram_size;
+	. = PMUSRAM_BASE;
 
-	/* sram.text size */
-	sram_size = (char *)&__bl31_sram_text_end -
-		    (char *)&__bl31_sram_text_start;
-	mmap_add_region((unsigned long)&__bl31_sram_text_start,
-			(unsigned long)&__bl31_sram_text_start,
-			sram_size, MT_MEMORY | MT_RO | MT_SECURE);
-
-	/* sram.data size */
-	sram_size = (char *)&__bl31_sram_data_end -
-		    (char *)&__bl31_sram_data_start;
-	mmap_add_region((unsigned long)&__bl31_sram_data_start,
-			(unsigned long)&__bl31_sram_data_start,
-			sram_size, MT_MEMORY | MT_RW | MT_SECURE);
-
-	sram_size = (char *)&__sram_incbin_end - (char *)&__sram_incbin_start;
-	mmap_add_region((unsigned long)&__sram_incbin_start,
-			(unsigned long)&__sram_incbin_start,
-			sram_size, MT_NON_CACHEABLE | MT_RW | MT_SECURE);
-}
-
-void plat_rockchip_mem_prepare(void)
-{	/*
-	 * The code for resuming cpu from suspend must be excuted in pmusram.
-	 * Copy the code into pmusram.
+	/*
+	 * pmu_cpuson_entrypoint request address
+	 * align 64K when resume, so put it in the
+	 * start of pmusram
 	 */
-	plat_rockchip_pmusram_prepare();
+	.text_pmusram : {
+		ASSERT(. == ALIGN(64 * 1024),
+			".pmusram.entry request 64K aligned.");
+		*(.pmusram.entry)
+		__bl31_pmusram_text_start = .;
+		*(.pmusram.text)
+		*(.pmusram.rodata)
+		__bl31_pmusram_text_end = .;
+		__bl31_pmusram_data_start = .;
+		*(.pmusram.data)
+		__bl31_pmusram_data_end = .;
+
+	} >PMUSRAM
 }
+
+#endif /* __ROCKCHIP_PLAT_LD_S__ */
