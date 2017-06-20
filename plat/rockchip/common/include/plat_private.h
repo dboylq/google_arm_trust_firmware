@@ -39,15 +39,11 @@
 
 #define __sramdata __attribute__((section(".sram.data")))
 #define __sramconst __attribute__((section(".sram.rodata")))
-#define __sramfunc __attribute__((section(".sram.text")))
-
-#define __pmusramdata __attribute__((section(".pmusram.data")))
-#define __pmusramconst __attribute__((section(".pmusram.rodata")))
-#define __pmusramfunc __attribute__((section(".pmusram.text")))
+#define __sramfunc __attribute__((section(".sram.text")))	\
+			__attribute__((noinline))
 
 extern uint32_t __bl31_sram_text_start, __bl31_sram_text_end;
 extern uint32_t __bl31_sram_data_start, __bl31_sram_data_end;
-extern uint32_t __bl31_sram_stack_start, __bl31_sram_stack_end;
 extern uint32_t __sram_incbin_start, __sram_incbin_end;
 
 /******************************************************************************
@@ -126,6 +122,7 @@ void plat_rockchip_gic_cpuif_enable(void);
 void plat_rockchip_gic_cpuif_disable(void);
 void plat_rockchip_gic_pcpu_init(void);
 
+void plat_rockchip_pmusram_prepare(void);
 void plat_rockchip_pmu_init(void);
 void plat_rockchip_soc_init(void);
 void plat_setup_rockchip_pm_ops(struct rockchip_pm_ops_cb *ops);
@@ -141,13 +138,15 @@ void plat_rockchip_gpio_init(void);
 
 extern const unsigned char rockchip_power_domain_tree_desc[];
 
-extern void *pmu_cpuson_entrypoint;
+extern void *pmu_cpuson_entrypoint_start;
+extern void *pmu_cpuson_entrypoint_end;
 extern uint64_t cpuson_entry_point[PLATFORM_CORE_COUNT];
 extern uint32_t cpuson_flags[PLATFORM_CORE_COUNT];
 
 extern const mmap_region_t plat_rk_mmap[];
 
-void rockchip_plat_mmu_el3(void);
+void rockchip_plat_sram_mmu_el3(void);
+void plat_rockchip_mem_prepare(void);
 
 #endif /* __ASSEMBLY__ */
 
