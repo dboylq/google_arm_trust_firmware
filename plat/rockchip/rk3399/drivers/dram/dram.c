@@ -34,7 +34,7 @@
 #include <soc.h>
 #include <rk3399_def.h>
 
-__pmusramdata struct rk3399_sdram_params sdram_config;
+__sramdata struct rk3399_sdram_params sdram_config;
 
 void dram_init(void)
 {
