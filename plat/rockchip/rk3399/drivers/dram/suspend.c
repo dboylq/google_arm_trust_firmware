@@ -145,12 +145,11 @@ static __sramfunc void phy_pctrl_reset(uint32_t ch)
 
 static __sramfunc void set_cs_training_index(uint32_t ch, uint32_t rank)
 {
-	uint32_t byte;
-
 	/* PHY_8/136/264/392 phy_per_cs_training_index_X 1bit offset_24 */
-	for (byte = 0; byte < 4; byte++)
-		mmio_clrsetbits_32(PHY_REG(ch, 8 + (128 * byte)), 0x1 << 24,
-				   rank << 24);
+	mmio_clrsetbits_32(PHY_REG(ch, 8), 0x1 << 24, rank << 24);
+	mmio_clrsetbits_32(PHY_REG(ch, 136), 0x1 << 24, rank << 24);
+	mmio_clrsetbits_32(PHY_REG(ch, 264), 0x1 << 24, rank << 24);
+	mmio_clrsetbits_32(PHY_REG(ch, 392), 0x1 << 24, rank << 24);
 }
 
 static __sramfunc void select_per_cs_training_index(uint32_t ch, uint32_t rank)
@@ -164,17 +163,19 @@ static void override_write_leveling_value(uint32_t ch)
 {
 	uint32_t byte;
 
-	for (byte = 0; byte < 4; byte++) {
-		/*
-		 * PHY_8/136/264/392
-		 * phy_per_cs_training_multicast_en_X 1bit offset_16
-		 */
-		mmio_clrsetbits_32(PHY_REG(ch, 8 + (128 * byte)), 0x1 << 16,
-				   1 << 16);
+	/*
+	 * PHY_8/136/264/392
+	 * phy_per_cs_training_multicast_en_X 1bit offset_16
+	 */
+	mmio_clrsetbits_32(PHY_REG(ch, 8), 0x1 << 16, 1 << 16);
+	mmio_clrsetbits_32(PHY_REG(ch, 136), 0x1 << 16, 1 << 16);
+	mmio_clrsetbits_32(PHY_REG(ch, 264), 0x1 << 16, 1 << 16);
+	mmio_clrsetbits_32(PHY_REG(ch, 392), 0x1 << 16, 1 << 16);
+
+	for (byte = 0; byte < 4; byte++)
 		mmio_clrsetbits_32(PHY_REG(ch, 63 + (128 * byte)),
 				   0xffff << 16,
 				   0x200 << 16);
-	}
 
 	/* CTL_200 ctrlupd_req 1bit offset_8 */
 	mmio_clrsetbits_32(CTL_REG(ch, 200), 0x1 << 8, 0x1 << 8);
